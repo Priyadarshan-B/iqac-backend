@@ -1,14 +1,9 @@
-const db = require("../../../config/database");
+const { query_database } = require('../../../config/database_utils');
 
-exports.get_academic_years = (req, res) => {
+
+exports.get_academic_years = (request, response) => {
     const query = `SELECT id, year FROM academic_year`;
-    
-    db.query(query, (err, results) => {
-        if (err) {
-            res.status(500).send("Error retrieving academic years");
-            console.error("Error retrieving academic years:", err);
-            return;
-        }
-        res.json(results);
-    });
+    const errorMessage = "Error retrieving academic years";
+
+    query_database(query, response, errorMessage);
 };
