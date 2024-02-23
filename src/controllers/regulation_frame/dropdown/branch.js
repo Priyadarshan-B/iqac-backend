@@ -1,13 +1,12 @@
-const { query_database } = require("../../../config/database_utils");
+const { get_query_database } = require("../../../config/database_utils");
 
 exports.get_branch = (req, res) => {
-    let regulation = req.query.regulation;
+    let degree = req.query.degree;
     const query = `
-        SELECT mb.id, mb.branch 
-        FROM master_branch mb  
-        INNER JOIN branch_regulation_mapping bmr ON mb.id = bmr.branch
-        WHERE bmr.regulation = ${regulation};`;
+        SELECT id, branch 
+        FROM master_branch  
+        WHERE degree = ${degree} AND status='1';`;
     const error_message = 'Error fetching branches';
 
-    query_database(query, res, error_message);
+    get_query_database(query, res, error_message);
 };

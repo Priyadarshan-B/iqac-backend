@@ -2,6 +2,7 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const body_parser = require("body-parser")
 
 //routes
 const regulation_frame_routes = require("./routes/regulation_frame/regulation_frame");
@@ -18,6 +19,7 @@ const port = 5000;
 // Enable CORS AND LOGGER MIDDLEWARE
 app.use(cors());
 app.use(morgan_config);
+app.use(body_parser.json())
 
 app.use("/api/rf", regulation_frame_routes);
 app.use("/api/cfm", course_faculty_mapping_routes);
