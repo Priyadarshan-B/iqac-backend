@@ -1,4 +1,4 @@
-const db = require("../../../config/database");
+const { query_database } = require("../../../config/database_utils");
 
 exports.get_branch = (req, res) => {
     let regulation = req.query.regulation;
@@ -7,13 +7,7 @@ exports.get_branch = (req, res) => {
         FROM master_branch mb  
         INNER JOIN branch_regulation_mapping bmr ON mb.id = bmr.branch
         WHERE bmr.regulation = ${regulation};`;
+    const error_message = 'Error fetching branches';
 
-    db.query(query, (err, results) => {
-        if (err) {
-            res.status(500).send("Error retrieving branch");
-            console.error("Error retrieving branches:", err);
-            return;
-        }
-        res.json(results);
-    });
+    query_database(query, res, error_message);
 };

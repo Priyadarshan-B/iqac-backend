@@ -1,13 +1,8 @@
-const db = require("../../../config/database");
+const { query_database } = require("../../../config/database_utils");
 
 exports.get_regulation = (req, res) => {
-    const query = "SELECT id, regulation FROM master_regulation";
-    db.query(query, (err, results) => {
-        if (err) {
-            res.status(500).send("Error retrieving academic years");
-            console.error("Error retrieving academic years:", err);
-            return;
-        }
-        res.json(results);
-    });
+    const query = `SELECT id, regulation FROM master_regulation`;
+    const error_message = 'Error fetching regulations';
+
+    query_database(query, res, error_message);
 };
