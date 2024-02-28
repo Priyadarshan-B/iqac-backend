@@ -15,7 +15,7 @@ function post_query_database(
     query,
     response,
     error_message,
-    sucess_message = "Posted data Successfully"
+    success_message = "Posted data Successfully"
 ) {
     db.query(query, (err, results) => {
         if (err) {
@@ -23,7 +23,7 @@ function post_query_database(
             console.error(error_message + ":", err);
             return;
         }
-        response.json(sucess_message);
+        response.json(success_message);
     });
 }
 
