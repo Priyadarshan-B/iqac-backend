@@ -1,7 +1,7 @@
 const { post_query_database } = require("../../../config/database_utils");
 
 exports.post_regulation = (req, res) => {
-    const regulation = req.body;
+    const {regulation} = req.body;
     if (!regulation) {
         res.status(400).json({
             error: "Regulation is required",
@@ -9,6 +9,7 @@ exports.post_regulation = (req, res) => {
     }
     const query = `INSERT INTO master_regulation (regulation, status)
     VALUES (${regulation}, '1')`;
+    console.log(query);
     const error_message = "Error adding regulation";
     const success_message = "Regulation added Successfully";
 

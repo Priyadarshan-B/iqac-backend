@@ -27,7 +27,6 @@ exports.post_po_pso = (req, res) => {
     post_query_database(query, res, error_message, success_message);
 };
 
-const { post_query_database } = require("../../../config/database_utils");
 
 exports.update_po_pso = (req, res) => {
     const { id, type, code_name, description } = req.body;

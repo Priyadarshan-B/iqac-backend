@@ -8,7 +8,7 @@ exports.post_branch = (req, res) => {
         });
     }
     const query = `INSERT INTO master_branch(degree, branch, status)
-    VALUES(${degree}, ${branch}, '1')`;
+    VALUES(${degree}, '${branch}', '1')`;
     const error_message = "Failed to Add Branch";
     const success_message = "Branch Added successfully";
 
@@ -23,7 +23,7 @@ exports.update_branch = (req, res) => {
         });
     }
     const query = `UPDATE master_branch
-    SET degree = ${degree}, branch =${branch}
+    SET degree = ${degree}, branch ='${branch}'
     WHERE id = ${id}`;
     const error_message = "Failed to update Branch";
     const success_message = "Branch Updated successfully";

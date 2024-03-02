@@ -21,7 +21,7 @@ exports.post_course_objective = (req, res) => {
         });
     }
     const query = `INSERT INTO course_objective(course, co_obj_id, description, status)
-    VALUES (${course}, ${co_obj_id}, ${description}, '1')`;
+    VALUES (${course}, '${co_obj_id}', '${description}', '1')`;
     const error_message = "Failed to add course objective";
     const success_message = "Course objective is added successfully";
     post_query_database(query, res, error_message, success_message);
@@ -35,7 +35,7 @@ exports.update_course_objective = (req, res) => {
         });
     }
     const query = `UPDATE course_objective
-    SET course = ${course}, co_obj_id = ${co_obj_id}, description = ${description}
+    SET course = ${course}, co_obj_id = '${co_obj_id}', description = '${description}'
     WHERE id = ${id}`;
     const error_message = "Failed to update Course Objective";
     const success_message = "Course Objective Updated successfully";
@@ -59,3 +59,5 @@ exports.delete_course_objective = (req, res) => {
 
     post_query_database(query, res, error_message, success_message);
 };
+
+

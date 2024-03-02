@@ -18,7 +18,7 @@ exports.post_course_outcome = (req, res) => {
         });
     }
     const query = `INSERT INTO course_outcome(course, co_id, description, status)
-    VALUES (${course}, ${co_id}, ${description}, '1')`;
+    VALUES (${course}, '${co_id}', '${description}', '1')`;
     const error_message = "Failed to insert course outcome";
     const success_message = "Course outcome added successfully";
 
@@ -34,7 +34,7 @@ exports.update_course_outcome = (req, res) => {
     }
 
     const query = `UPDATE course_outcome
-    SET course = ${course}, co_id = ${co_id}, description = ${description}
+    SET course = ${course}, co_id = '${co_id}', description = '${description}'
     WHERE id = ${id}`;
     const error_message = "Failed to update course outcome";
     const success_message = "Course outcome updated successfully";
