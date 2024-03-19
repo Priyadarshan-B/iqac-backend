@@ -1,152 +1,63 @@
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const User = require("../models/user");
-const { Op } = require("sequelize");
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const mysql = require('mysql2');
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
-const { getCalendarEvents, refreshAccessToken } = require('../routes/auth/accesstoken');
-require("dotenv").config();
-
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.CLIENT_ID,
-      clientSecret: process.env.CLIENT_SECRET,
-      callbackURL: "/auth/google/callback",
-      scope: ["profile", "email"],
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        let user = await User.findOne({
-          where: {
-            [Op.or]: [
-              // Use Op.or instead of $or
-              { googleId: profile.id },
-              { email: profile.emails[0].value },
-            ],
-          },
-        });
-
-        if (user) {
-          // User already exists, update the record
-          user.displayName = profile.displayName;
-          user.accessToken = accessToken;
-          user.refreshToken = refreshToken;
-          await user.save();
-          console.log("User updated:", user);
-
-          // Check if access token is not null or undefined
-          if (accessToken) {
-            const decodedToken = jwt.decode(accessToken);
-            if (decodedToken && decodedToken.exp) {
-              const expirationTime = decodedToken.exp * 1000; // Convert from seconds to milliseconds
-              // Check if the access token is expired
-              const tokenExpired = Date.now() >= expirationTime;
-              if (tokenExpired) {
-                const newAccessToken = await refreshAccessToken(user.refreshToken);
-                user.accessToken = newAccessToken;
-                await user.save();
-              }
-              getCalendarEvents(accessToken);
-            } else {
-              // Handle the case where the 'exp' property is null or undefined
-              console.error("Error: Unable to extract expiration time from access token.");
-            }
-          } else {
-            // Handle the case where accessToken is null or undefined
-            console.error("Error: Access token is null or undefined.");
-          }
-        } 
-        else {
-          // Create a new user
-          user = new User({
-            googleId: profile.id,
-            displayName: profile.displayName,
-            email: profile.emails[0].value,
-            accessToken,
-            refreshToken,
-          });
-          await user.save();
-          console.log("New user created:", user);
-        }
-
-        done(null, user);
-      } catch (error) {
-        console.error("Error during authentication:", error);
-        done(error, false);
-      }
-    }
-  )
-);
-
-passport.serializeUser((user, done) => {
-  done(null, user.id);
+// Database connection
+const db = mysql.createConnection({
+ host: process.env.DATABASE_HOST,
+ user: process.env.DATABASE_USER,
+ password: process.env.DATABASE_PASSWORD,
+ database: process.env.DATABASE_NAME
 });
 
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findOne({ where: { id } });
-    done(null, user);
-  } catch (error) {
-    done(error, false);
-  }
+passport.use(new GoogleStrategy({
+    clientID: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    callbackURL: "/auth/google/callback"
+ },
+ function(accessToken, refreshToken, profile, cb) {
+    // Check if user exists in the database
+    const query = `SELECT * FROM google_users WHERE google_id = ?`;
+    db.query(query, [profile.id], function(error, results) {
+      if (error) {
+        return cb(error);
+      }
+      if (results.length > 0) {
+        // User exists, check email in master_students table
+        const emailQuery = `SELECT * FROM master_students WHERE email = ?`;
+        db.query(emailQuery, [profile.emails[0].value], function(error, masterResults) {
+          if (error) {
+            return cb(error);
+          }
+          if (masterResults.length > 0) {
+            const token = jwt.sign({ id: results[0].id }, process.env.JWT_SECRET, { expiresIn: '5m' });
+            return cb(null, { token });
+          } else {
+            return cb(new Error('Email not found in master_students'));
+          }
+        });
+      } else {
+        const insertQuery = `INSERT INTO google_users (google_id, name, email) VALUES (?, ?, ?)`;
+        db.query(insertQuery, [profile.id, profile.displayName, profile.emails[0].value], function(error, results) {
+          if (error) {
+            return cb(error);
+          }
+          const token = jwt.sign({ id: results.insertId }, process.env.JWT_SECRET, { expiresIn: '5m' });
+          return cb(null, { token });
+        });
+      }
+    });
+ }
+));
+
+passport.serializeUser(function(user, done) {
+ done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+ done(null, user);
 });
 
 module.exports = passport;
-
-
-// const passport = require("passport");
-// const GoogleStrategy = require("passport-google-oauth20").Strategy;
-// const User = require("../models/user");
-// require("dotenv").config();
-
-// passport.use(
-//   new GoogleStrategy(
-//     {
-//       clientID: process.env.CLIENT_ID,
-//       clientSecret: process.env.CLIENT_SECRET,
-//       callbackURL: "/auth/google/callback",
-//       scope: ["profile", "email"],
-//     },
-//     async (accessToken, refreshToken, profile, done) => {
-//       try {
-//         console.log("Google ID received:", profile.id)
-//         let user = await User.findOne({ googleId: profile.id });
-
-//         if (!user) {
-//           console.log("Creating new user...");
-//           user = new User({
-//             googleId: profile.id,
-//             displayName: profile.displayName,
-//             email: profile.emails[0].value,
-//           });
-//           await user.save();
-//           console.log("New user created:", user);
-//         }
-
-//         done(null, user);
-//       } catch (error) {
-//         console.error("Error during authentication:", error);
-//         done(error, false);
-//       }
-//     }
-//   )
-// );
-
-// passport.serializeUser((user, done) => {
-//   done(null, user.id);
-// });
-
-// passport.deserializeUser(async (id, done) => {
-//   try {
-//     const user = await User.findOne({ where: { id } });
-//     done(null, user);
-//   } catch (error) {
-//     done(error, false);
-//   }
-// });
-
-// module.exports = passport;
-
-// clientID: 207769143225-vbmg55s3k3evs99vapl9a8uvql9essg1.apps.googleusercontent.com,
-// clientSecret: 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,
