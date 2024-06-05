@@ -16,11 +16,9 @@ exports.updateMarks = (req, res) => {
   
       student.marks.forEach((mark, i) => {
         const co = req.body.co[i].id;
-        const query = `
-        REPLACE INTO mark_entry (student, type, co_id, mark)
-VALUES (?, ?, ?, ?);
-        `
-        db.query(query,
+  
+        db.query(
+          `INSERT INTO mark_entry(student,type,co_id,mark) VALUES (?,?,?,?)`,
           [id, type, co, mark],
           (err) => {
             if (err) {
@@ -38,22 +36,3 @@ VALUES (?, ?, ?, ?);
   
     return res.status(200).send("Mark Entered");
   };
-
-  exports.getMarks = (req,res)=>{
-    const query = `SELECT student,type,co_id,mark,present FROM mark_entry WHERE co_id = ? AND type = ?`
-    db.query(query,[req.query.co_id,req.query.type],(err,rows)=>{
-          if(err){
-            console.log(err)
-          }
-          else{
-            let mark_dict = {}
-            rows.forEach(element => {
-              mark_dict['S'+element.student+'C'+element.co_id+'T'+element.type] = {mark:element.mark,present:element.present}
-            });
-
-            res.send(mark_dict)
-
-            console.log(mark_dict)
-          }
-    })
-  }
