@@ -13,22 +13,47 @@ exports.updateMarks = (req, res) => {
     req.body.student.forEach((student) => {
       const type = student.type;
       const id = student.id;
-  
+      const update_query = `
+        UPDATE mark_entry SET mark = ? WHERE student = ? AND type = ? AND co_id = ? AND NOT mark = ?
+        `
+        const insert_query = `INSERT INTO mark_entry (student,type,co_id,mark) VALUES (?,?,?,?)`
+
       student.marks.forEach((mark, i) => {
         const co = req.body.co[i].id;
-        const query = `
-        REPLACE INTO mark_entry (student, type, co_id, mark)
-VALUES (?, ?, ?, ?);
-        `
-        db.query(query,
-          [id, type, co, mark],
-          (err) => {
-            if (err) {
-              console.log(err);
-              errors.push(err);
+
+        db.query(`SELECT COUNT(id) count FROM mark_entry WHERE student = ? AND type = ? AND co_id = ? LIMIT 1`,[id,type,co],(err,rows)=>{
+          if(err){
+            console.log(err)
+          }
+          else{
+            if(rows[0].count>0){
+              console.log(rows , " exists updating ..............")
+              db.query(update_query,
+                [mark,id, type, co, mark],
+                (err) => {
+                  if (err) {
+                    console.log(err);
+                    errors.push(err);
+                  }
+                }
+              );
+            }
+            else{
+              console.log("Does Not Exists Inserting .............")
+              db.query(insert_query,
+                [id, type, co, mark],
+                (err) => {
+                  if (err) {
+                    console.log(err);
+                    errors.push(err);
+                  }
+                }
+              );
             }
           }
-        );
+        })
+        
+      
       });
     });
   
@@ -56,4 +81,34 @@ VALUES (?, ?, ?, ?);
             console.log(mark_dict)
           }
     })
+  }
+
+  exports.updateAttendance = (req,res)=>{
+    const query =  `INSERT IGNORE INTO mark_entry (student,type,co_id,present) VALUES (?,?,?,?)`
+    const searchQuery = `SELECT s.id student,  c.id course , type.id type FROM master_students s   INNER JOIN master_courses  c INNER JOIN course_outcome co ON co.course = c.id INNER JOIN test_type type ON ?  = type.type
+WHERE s.register_number = ? AND c.code = ?  LIMIT 1`
+const coBound = 3
+    req.body.data.map((data)=>{
+      const present = data.Attendance == "Present" ? 1 :0
+      db.query(searchQuery,[data["Test Type"],data["Register Number"],data["Course"]],(err,rows)=>{
+        console.log(data)
+        console.log(data["Register Number"],data["Course"])
+        console.log()
+        const student = rows[0].student
+        const type = rows[0].type
+        let limit = 5
+        if(type<5){
+            limit = 3
+        }
+        db.query(`SELECT co.id FROM course_outcome co INNER JOIN master_courses mc ON mc.id = co.course WHERE mc.id = ? ORDER BY co.id `+(type==2 || type==4?"DESC":"ASC") + ` LIMIT ?`,[rows[0].course,limit],(err,rows)=>{
+          console.log(err)
+          rows.map((data)=>{
+            db.query(query,[student,type,data.id,present])
+          })
+        })
+   
+      })
+    })
+      
+
   }

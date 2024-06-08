@@ -7,7 +7,7 @@ exports.getCourse=(req,res)=>{
         const faculty = req.query.faculty;
         const branch = req.query.branch;
         console.log(semester);
-         query = `SELECT master_courses.id,master_courses.name FROM master_courses  INNER JOIN faculty_course_mapping fcm ON fcm.course = master_courses.id WHERE master_courses.status = '1' AND master_courses.semester=${semester} AND fcm.faculty=${faculty} AND master_courses.branch = ${branch}`
+         query = `SELECT master_courses.id, master_courses.name , master_courses.code FROM master_courses  INNER JOIN faculty_course_mapping fcm ON fcm.course = master_courses.id WHERE master_courses.status = '1' AND master_courses.semester=${semester} AND fcm.faculty=${faculty} AND master_courses.branch = ${branch}`
     }
     
     else{
