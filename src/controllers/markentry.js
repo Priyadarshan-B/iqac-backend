@@ -1,3 +1,4 @@
+const { response } = require("express");
 const db = require("../config/database");
 
 
@@ -111,4 +112,32 @@ const coBound = 3
     })
       
 
+  }
+  exports.markReport = (req,res)=>{
+    const type = req.query.type
+    const regulation = req.query.regulation
+    const year = req.query.year
+    const semester = req.query.semester
+        const query = `SELECT report.branch,report.code,report.name,COUNT(report.student) strength,
+COUNT(CASE WHEN report.present=1 THEN 1 ELSE NULL END) present_count,
+COUNT(CASE WHEN report.present=0 THEN 1 ELSE NULL END) absent_count,
+COUNT(CASE WHEN report.mark<25 THEN 1 ELSE NULL END) fail_count,
+CONCAT(
+FORMAT(
+(COUNT(CASE WHEN report.mark>=25 THEN 1 ELSE NULL END)/COUNT(report.student) )*100,2
+),"%") pass_percentage
+FROM (SELECT  me.present,mb.branch, me.student,SUM(me.mark) mark,mc.code,mc.name,me.type  FROM mark_entry me  
+INNER JOIN course_outcome co ON co.id = me.co_id 
+INNER JOIN master_courses mc ON mc.id = co.course
+INNER JOIN master_branch mb ON mb.id = mc.branch
+INNER JOIN master_degree md ON md.id = mb.degree
+INNER JOIN master_students ms ON ms.id = me.student
+INNER JOIN master_regulation mr ON mr.id = md.regulation
+ WHERE me.type =  ? AND mr.id = ? AND ms.year = ? AND mc.semester = ?
+GROUP BY me.student,mc.code,mc.name,me.type,mb.branch,me.present) report GROUP BY report.code,report.branch,report.name
+`
+db.query(query,[type,regulation,year,semester],(err,rows)=>{
+  console.log(rows)
+  res.send(rows)
+})
   }

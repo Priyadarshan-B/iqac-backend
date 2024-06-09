@@ -13,6 +13,7 @@ const courseOutcomeRoutes= require('./routes/courseoutcome_route')
 const studentsRoutes = require('./routes/students_routes')
 const yearRoutes = require('./routes/year_route')
 const markEntryRoutes =  require('./routes/markentry_route')
+const auth = require('./routes/auth/auth')
 const app = express();
 const port = 5000;
  
@@ -33,6 +34,8 @@ app.use(courseOutcomeRoutes);
 app.use(studentsRoutes)
 app.use(yearRoutes)
 app.use(markEntryRoutes)
+app.use('/auth',auth)
+
 // Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
