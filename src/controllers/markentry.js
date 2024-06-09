@@ -102,10 +102,16 @@ const coBound = 3
             limit = 3
         }
         db.query(`SELECT co.id FROM course_outcome co INNER JOIN master_courses mc ON mc.id = co.course WHERE mc.id = ? ORDER BY co.id `+(type==2 || type==4?"DESC":"ASC") + ` LIMIT ?`,[rows[0].course,limit],(err,rows)=>{
-          console.log(err)
+           if(err){
+            console.log(err)
+           }
           rows.map((data)=>{
-            db.query(query,[student,type,data.id,present])
+            db.query(query,[student,type,data.id,present],(err)=>{
+              console.log(err)
+            })
           })
+
+          res.status(200)
         })
    
       })
