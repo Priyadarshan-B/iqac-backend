@@ -1,12 +1,12 @@
 
 const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = new Sequelize('iqac', 'sabareesh', 'sabareesh', {
+const sequelize = new Sequelize('iqac', 'root', 'root', {
   host: 'localhost',
   dialect: 'mysql'
 });
 
 const User = sequelize.define('User', {
-    googleId: {
+  googleId: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true
