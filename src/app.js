@@ -21,6 +21,9 @@ app.use(express.json())
 // Enable CORS
 app.use(cors());
 
+const regulation_frame_routes = require('./routes/regulation_frame/regulation_frame')
+const course_faculty_mapping_routes = require('./routes/course_faculty_mapping/course_faculty_mapping')
+
 // Use academic year routes
 app.use( academicYearRoutes);
 app.use(semesterRoutes);
@@ -34,6 +37,8 @@ app.use(courseOutcomeRoutes);
 app.use(studentsRoutes)
 app.use(yearRoutes)
 app.use(markEntryRoutes)
+app.use('/api/rf',regulation_frame_routes)
+app.use('/api/cfm',course_faculty_mapping_routes)
 app.use('/auth',auth)
 
 // Start server
