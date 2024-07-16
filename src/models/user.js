@@ -6,7 +6,7 @@ const sequelize = new Sequelize('iqac', 'root', 'root', {
 });
 
 const User = sequelize.define('User', {
-    googleId: {
+  googleId: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true
