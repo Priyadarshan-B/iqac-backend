@@ -9,6 +9,9 @@ const degree_dropdown = require("../../controllers/regulation_frame/dropdown/deg
 const course_dropdown = require("../../controllers/regulation_frame/dropdown/course");
 const course_category_dropdown  =require("../../controllers/regulation_frame/dropdown/course_category")
 
+// syllabus
+const syllabus_Entry = require('../../controllers/regulation_frame/syllabusEntry/syllabusentry')
+
 const main_regulation = require("../../controllers/regulation_frame/main/regulation")
 const main_degree = require("../../controllers/regulation_frame/main/degree")
 const main_branch = require("../../controllers/regulation_frame/main/branch")
@@ -77,4 +80,7 @@ router.delete("/po-pso", main_po_pso.delete_po_pso)
 
 router.get("/co-po-mapping", main_co_po_mapping.get_co_po_mapping)
 router.post("/co-po-mapping", main_co_po_mapping.post_co_po_mapping )
+
+router.get('/syllabus', syllabus_Entry.get_syllabus);
+
 module.exports = router;
