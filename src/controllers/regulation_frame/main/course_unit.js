@@ -18,13 +18,14 @@ exports.post_course_unit =(req, res)=>{
         })
     }
     const query = `INSERT INTO course_unit(course, unit, unit_name, description, hours, status)
-    VALUES (${course}, '${unit}', '${unit_name}', '${escape(description)}', ${hours}, '1')`
+    VALUES (${course}, '${unit}', '${unit_name}', '${description}', ${hours}, '1')`
 
-    const error_message = "Failed to add course unit"
-    const success_message = "Course unit added successfully"
+    const error_message = "Failed to add course unit(s)";
+    const success_message = "Course unit(s) added successfully";
 
-    post_query_database(query, res, error_message, success_message)
-}
+    post_query_database(query, res, error_message, success_message);
+};
+
 
 exports.update_course_unit = (req, res) => {
     const { id, course, unit, unit_name, description, hours } = req.body;
