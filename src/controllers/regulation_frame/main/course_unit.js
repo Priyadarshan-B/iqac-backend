@@ -18,7 +18,7 @@ exports.post_course_unit =(req, res)=>{
         })
     }
     const query = `INSERT INTO course_unit(course, unit, unit_name, description, hours, status)
-    VALUES (${course}, '${unit}', '${unit_name}', '${description}', ${hours}, '1')`
+    VALUES (${course}, '${unit}', '${unit_name}', '${escape(description)}', ${hours}, '1')`
 
     const error_message = "Failed to add course unit"
     const success_message = "Course unit added successfully"
