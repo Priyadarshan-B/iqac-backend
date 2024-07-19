@@ -24,6 +24,7 @@ exports.get_co_po_mapping = (req, res) => {
 
 exports.post_co_po_mapping = (req, res) => {
     const mappings = req.body;
+    console.log(mappings)
 
     if (!Array.isArray(mappings) || mappings.length === 0) {
         return res.status(400).json({

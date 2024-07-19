@@ -10,21 +10,47 @@ exports.get_course_unit = (req, res) => {
     get_query_database(query, res, error_message);
 };
 
-exports.post_course_unit =(req, res)=>{
-    const {course, unit, unit_name, description, hours} = req.body
-    if(!course || !unit ||!unit_name ||!description){
-        res.status(400).json({
-            error:"Course, unit, unit name, description and hours is required"
-        })
+exports.post_course_unit = (req, res) => {
+    const courseUnits = req.body; 
+    console.log(courseUnits)
+
+    if (!Array.isArray(courseUnits) || courseUnits.length === 0) {
+        return res.status(400).json({
+            error: "Request body must be an array of course unit objects"
+        });
     }
-    const query = `INSERT INTO course_unit(course, unit, unit_name, description, hours, status)
-    VALUES (${course}, '${unit}', '${unit_name}', '${description}', ${hours}, '1')`
 
-    const error_message = "Failed to add course unit"
-    const success_message = "Course unit added successfully"
+    let values = [];
+    let errors = [];
 
-    post_query_database(query, res, error_message, success_message)
-}
+    courseUnits.forEach((courseUnit, index) => {
+        const { course, unit, unit_name, description, hours } = courseUnit;
+
+        if (!course || !unit || !unit_name || !description || !hours) {
+            errors.push({
+                index,
+                error: "Course, unit, unit name, description, and hours are required"
+            });
+        } else {
+            values.push(`(${course}, '${unit}', '${unit_name}', '${description}', ${hours}, '1')`);
+        }
+    });
+
+    if (errors.length > 0) {
+        return res.status(400).json({ errors });
+    }
+
+    const query = `
+        INSERT INTO course_unit(course, unit, unit_name, description, hours, status)
+        VALUES ${values.join(', ')}
+    `;
+
+    const error_message = "Failed to add course unit(s)";
+    const success_message = "Course unit(s) added successfully";
+
+    post_query_database(query, res, error_message, success_message);
+};
+
 
 exports.update_course_unit = (req, res) => {
     const { id, course, unit, unit_name, description, hours } = req.body;
