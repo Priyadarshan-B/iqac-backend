@@ -120,12 +120,61 @@ WHERE s.register_number = ? AND c.code = ?  LIMIT 1`
 
 
 }
+exports.getMarkList = (req, res) => {
+  const type = req.query.type
+  const regulation = req.query.regulation
+  const year = req.query.year
+  const semester = req.query.semester
+  const course = req.query.course
+  const query = `SELECT  report.name Name, report.register_number Register_Number, report.courseCode Course,SUM(report.mark) Mark FROM
+(SELECT SUM(me.mark) mark, me.type, ms.name, ms.register_number, mc.code courseCode, co.course from mark_entry me 
+INNER JOIN course_outcome co ON me.co_id = co.id INNER JOIN master_students ms
+ ON ms.id = me.student INNER JOIN master_courses mc ON mc.id = co.course GROUP  BY ms.id, co.id, me.type, mc.id) report
+WHERE   report.course = ? AND report.type = ? GROUP BY report.register_number;`
+  db.query(query, [course, type], (err, rows) => {
+    console.log(rows)
+    res.send(rows)
+  })
+}
+exports.getFailures = (req, res) => {
+  const type = req.query.type
+  const regulation = req.query.regulation
+  const year = req.query.year
+  const semester = req.query.semester
+  const course = req.query.course
+  const query = `SELECT  report.name Name, report.register_number Register_Number, report.courseCode Course,SUM(report.mark) Mark FROM
+(SELECT SUM(me.mark) mark, me.type, ms.name, ms.register_number, mc.code courseCode, co.course from mark_entry me 
+INNER JOIN course_outcome co ON me.co_id = co.id INNER JOIN master_students ms
+ ON ms.id = me.student INNER JOIN master_courses mc ON mc.id = co.course GROUP  BY ms.id, co.id, me.type, mc.id) report
+WHERE report.mark < 25  AND report.course = ? AND report.type = ? GROUP BY report.register_number HAVING SUM(report.mark) < 25;`
+  db.query(query, [course, type], (err, rows) => {
+    console.log(rows)
+    res.send(rows)
+  })
+}
+
+exports.getAbsentees = (req, res) => {
+  const type = req.query.type
+  const regulation = req.query.regulation
+  const year = req.query.year
+  const semester = req.query.semester
+  const course = req.query.course
+  const query = `SELECT DISTINCT ms.register_number,ms.name,mc.code Course FROM mark_entry me INNER JOIN master_students ms
+ ON ms.id = me.student INNER JOIN course_outcome co ON co.id = me.co_id INNER JOIN 
+master_courses mc ON mc.id = co.course
+WHERE me.present = 0 AND mc.id = ? AND me.type=? ;`
+  db.query(query, [course, type], (err, rows) => {
+    console.log(rows)
+    res.send(rows)
+  })
+}
+
 exports.markReport = (req, res) => {
   const type = req.query.type
   const regulation = req.query.regulation
   const year = req.query.year
   const semester = req.query.semester
-  const query = `SELECT report.branch,report.code,report.name,COUNT(report.student) strength,
+  const query = `SELECT report.branch,report.code,report.name,report.course_id,COUNT(report.student) strength,
 COUNT(CASE WHEN report.present=1 THEN 1 ELSE NULL END) present_count,
 COUNT(CASE WHEN report.present=0 THEN 1 ELSE NULL END) absent_count,
 COUNT(CASE WHEN report.mark<25 THEN 1 ELSE NULL END) fail_count,
@@ -139,7 +188,7 @@ COUNT(CASE WHEN report.mark>=51 AND report.mark<=80 THEN 1 ELSE NULL END) range_
 COUNT(CASE WHEN report.mark>=81 AND report.mark<=100 THEN 1 ELSE NULL END) range_81_100,
 MIN(mark) min_mark,
 MAX(mark) max_mark
-FROM (SELECT  me.present,mb.branch, me.student,SUM(me.mark) mark,mc.code,mc.name,me.type  FROM mark_entry me  
+FROM (SELECT  me.present,mb.branch, me.student,SUM(me.mark) mark,mc.code,mc.name,mc.id course_id,me.type  FROM mark_entry me  
 INNER JOIN course_outcome co ON co.id = me.co_id 
 INNER JOIN master_courses mc ON mc.id = co.course
 INNER JOIN master_branch mb ON mb.id = mc.branch
@@ -147,9 +196,11 @@ INNER JOIN master_degree md ON md.id = mb.degree
 INNER JOIN master_students ms ON ms.id = me.student
 INNER JOIN master_regulation mr ON mr.id = md.regulation
  WHERE me.type =  ? AND mr.id = ? AND ms.year = ? AND mc.semester = ?
-GROUP BY me.student,mc.code,mc.name,me.type,mb.branch,me.present) report GROUP BY report.code,report.branch,report.name
+GROUP BY me.student,mc.code,mc.name,me.type,mb.branch,me.present,mc.id)
+report GROUP BY report.code,report.branch,report.name,report.course_id
 `
   db.query(query, [type, regulation, year, semester], (err, rows) => {
+    console.log(err);
     console.log(rows)
     res.send(rows)
   })
