@@ -1,42 +1,55 @@
 const { post_query_database } = require("../../../config/database_utils");
 
 exports.post_course = (req, res) => {
-    const {
-        branch,
-        semester,
-        code,
-        name,
-        lecture_hours,
-        tutorial_hours,
-        practical_hours,
-        credit,
-        hours_per_week,
-        ca,
-        es,
-        total,
-        category,
-    } = req.body;
-    if (
-        !branch ||
-        !semester ||
-        !code ||
-        !name ||
-        !lecture_hours ||
-        !tutorial_hours ||
-        !practical_hours ||
-        !credit ||
-        !hours_per_week ||
-        !ca ||
-        !es ||
-        !total ||
-        !category
-    ) {
-        res.status(400).json({
-            error: "Fields 'branch', 'semester', 'code', 'name', 'lecture_hours', 'tutorial_hours', 'practical_hours', 'credit', 'hours_per_week', 'ca', 'es', 'total', and 'category' are required",
-        });
+    const mappings = req.body;
+    console.log(mappings)
+
+    if(!Array.isArray(mappings) || mappings.length === 0){
+        return res.status(400).json({
+            error:"Values are incorrect"
+        })
     }
+    const values = mappings.map(mapping=>{
+        const {
+            branch,
+            semester,
+            code,
+            name,
+            lecture_hours,
+            tutorial_hours,
+            practical_hours,
+            credit,
+            hours_per_week,
+            ca,
+            es,
+            total,
+            category,
+        } = mapping;
+        if (
+            !branch ||
+            !semester ||
+            !code ||
+            !name ||
+            !lecture_hours ||
+            !tutorial_hours ||
+            !practical_hours ||
+            !credit ||
+            !hours_per_week ||
+            !ca ||
+            !es ||
+            !total ||
+            !category
+        ) {
+            res.status(400).json({
+                error: "Fields 'branch', 'semester', 'code', 'name', 'lecture_hours', 'tutorial_hours', 'practical_hours', 'credit', 'hours_per_week', 'ca', 'es', 'total', and 'category' are required",
+            });
+        }
+        return `(${branch}, ${semester}, '${code}', '${name}', ${lecture_hours}, ${tutorial_hours}, ${practical_hours}, ${credit}, ${hours_per_week}, ${ca}, ${es}, ${total}, ${category}, '1')`
+    }).join(', ')
+    
+    
     const query = `INSERT INTO master_courses(branch, semester, code, name, lecture_hours, tutorial_hours, practical_hours, credit, hours_per_week, ca, es, total, category, status)
-    VALUES(${branch}, ${semester}, '${code}', '${name}', ${lecture_hours}, ${tutorial_hours}, ${practical_hours}, ${credit}, ${hours_per_week}, ${ca}, ${es}, ${total}, ${category}, '1')`;
+    VALUES ${values}`;
     const error_message = "Failed to Add Course";
     const success_message = "Course Added successfully";
 

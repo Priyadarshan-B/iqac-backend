@@ -14,17 +14,42 @@ exports.get_course_objective = (req, res) => {
 };
 
 exports.post_course_objective = (req, res) => {
-    const { course, co_obj_id, description } = req.body;
-    if (!course || !co_obj_id || !description) {
-        res.status(400).json({
-            error: "Course, co_obj_id, description is required",
+    const courseObjectives = req.body;
+    if (!Array.isArray(courseObjectives) || courseObjectives.length === 0) {
+        return res.status(400).json({
+            error: "Course objectives are required and should be an array",
         });
     }
-    const query = `INSERT INTO course_objective(course, co_obj_id, description, status)
-    VALUES (${course}, '${co_obj_id}', '${description}', '1')`;
-    const error_message = "Failed to add course objective";
-    const success_message = "Course objective is added successfully";
-    post_query_database(query, res, error_message, success_message);
+
+    let successCount = 0;
+    let errorCount = 0;
+    const errorMessages = [];
+
+    courseObjectives.forEach(({ course, objective, description }) => {
+        if (!course || !objective || !description) {
+            errorMessages.push(`Course, objective, and description are required for ${JSON.stringify({ course, objective, description })}`);
+            errorCount++;
+            return;
+        }
+
+        const query = `INSERT INTO course_objective(course, co_obj_id, description, status)
+                       VALUES (${course}, '${objective}', '${description}', '1')`;
+        const error_message = `Failed to add course objective: ${objective}`;
+
+        post_query_database(query, res, error_message, () => {
+            successCount++;
+            if (successCount + errorCount === courseObjectives.length) {
+                if (errorCount === 0) {
+                    res.status(200).json({ message: "All course objectives are added successfully" });
+                } else {
+                    res.status(500).json({
+                        message: "Some course objectives failed to add",
+                        errors: errorMessages,
+                    });
+                }
+            }
+        });
+    });
 };
 
 exports.update_course_objective = (req, res) => {
