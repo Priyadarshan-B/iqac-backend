@@ -164,7 +164,7 @@ ${department !== undefined ? "AND ms.department = ?" : ""}
                  report.register_number, 
                  report.courseCode, 
                  report.typeName
-        HAVING SUM(report.mark) < 25
+        HAVING SUM(report.mark) < ${type == 5 ? '50' : '25'}
     ) final_report 
     GROUP BY final_report.register_number
   `;
@@ -266,7 +266,7 @@ exports.getAbsenteesAndFailures = (req, res) => {
     ${department != undefined ? `AND ms.department = ?` : ""}
       GROUP BY ms.id, co.id, me.type, mc.id
     ) report
-    WHERE report.mark < 25
+    WHERE report.mark < ${type == 5 ? '50' : '25'}
     ${course != undefined ? `AND report.course = ?` : ""}
     AND report.type = ?
     GROUP BY ${course == undefined ? `report.courseCode,` : ""}
@@ -355,7 +355,8 @@ exports.absenteesAndFailures = (req, res) => {
 report.name "Course Name",
 report.course_id,
 COUNT(report.student) "Total Students",
-COUNT(CASE WHEN report.mark<25 THEN 1 ELSE NULL END) "Failure Count",
+COUNT(CASE WHEN report.mark<${type == 5 ? '50' : '25'}
+THEN 1 ELSE NULL END) "Failure Count",
 COUNT(CASE WHEN report.present=0 THEN 1 ELSE NULL END) "Absentees Count"
 FROM (SELECT  me.present,mb.branch, me.student,SUM(me.mark) mark,mc.code,mc.name,mc.id course_id,me.type  FROM mark_entry me  
 INNER JOIN course_outcome co ON co.id = me.co_id 
@@ -412,11 +413,13 @@ exports.getFailures = (req, res) => {
       ${departmentCondition}
       GROUP BY ms.id, co.id, me.type, mc.id
     ) report
-    WHERE report.mark < 25
-    ${courseCondition}
+    WHERE report.mark < ${type == 5 ? '50' : '25'}
+
+${courseCondition}
     AND report.type = ?
     GROUP BY ${groupByCourse} report.register_number
-    HAVING SUM(report.mark) < 25;
+    HAVING SUM(report.mark) < ${type == 5 ? '50' : '25'}
+;
   `;
 
   console.log(query);
@@ -510,7 +513,8 @@ report.course_id,
 COUNT(report.student) "Total Students",
 COUNT(CASE WHEN report.present=1 THEN 1 ELSE NULL END) "Present Count",
 COUNT(CASE WHEN report.present=0 THEN 1 ELSE NULL END) "Absentees Count",
-COUNT(CASE WHEN report.mark<25 THEN 1 ELSE NULL END) "Failure Count",
+COUNT(CASE WHEN report.mark<${type == 5 ? '50' : '25'}
+ THEN 1 ELSE NULL END) "Failure Count",
 CONCAT(
 FORMAT(
 (COUNT(CASE WHEN report.mark>=${type == 5 ? 50 : 25} THEN 1 ELSE NULL END)/COUNT(report.student) )*100,2
@@ -582,7 +586,8 @@ exports.failureReport = (req, res) => {
 report.name "Course Name",
 report.course_id,
 COUNT(report.student) "Total Students",
-COUNT(CASE WHEN report.mark<25 THEN 1 ELSE NULL END) "Failure Count"
+COUNT(CASE WHEN report.mark<${type == 5 ? '50' : '25'}
+ THEN 1 ELSE NULL END) "Failure Count"
 FROM (SELECT  me.present,mb.branch, me.student,SUM(me.mark) mark,mc.code,mc.name,mc.id course_id,me.type  FROM mark_entry me  
 INNER JOIN course_outcome co ON co.id = me.co_id 
 INNER JOIN master_courses mc ON mc.id = co.course
