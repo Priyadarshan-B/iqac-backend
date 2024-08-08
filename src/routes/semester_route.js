@@ -9,4 +9,5 @@ router.get('/getSemesterEvaluation', semesterEvaluationController.getEvaluationM
 router.get('/semesterFacultyAllocation', semesterEvaluationController.getSemesterFacultyAllocation);
 router.get('/facultySuggestionCourseDetails', semesterEvaluationController.getFacultyCourseDetails); // Added new route
 router.post('/replaceFaculty',semesterEvaluationController.replaceFaculty)
+router.get('/faculty_replacement_requests', semesterEvaluationController.getReplacementRequestDetails);
 module.exports = router;

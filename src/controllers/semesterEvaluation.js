@@ -50,12 +50,14 @@ exports.getSemesterFacultyAllocation = (req, res) => {
     GROUP_CONCAT(
         DISTINCT CONCAT(
             report2.faculty, 
-            ' ||', 
+            '||', 
             CASE 
                 WHEN report2.status = '1' THEN 'active'
-                ELSE 'pending'
+                WHEN report2.status = '2' THEN 'Faculty Approval Pending'
+                WHEN report2.status = '3' THEN 'COE Approval Pending'
+                WHEN report2.status = '4' THEN 'Replaced'
+                ELSE 'unknown' -- Optional: handle unexpected statuses
             END
-            
         ) 
         SEPARATOR ', '
     ) AS faculty
@@ -84,6 +86,7 @@ GROUP BY
     report2.course,
     report2.courseId
 ORDER BY report2.course;
+
 `;
 
   function parseFacultyString(facultyString) {
@@ -212,7 +215,7 @@ exports.replaceFaculty = (req, res) => {
     // Update the status of the previous faculty in semesterEvaluationMapping
     const updateQuery = `
       UPDATE semesterEvaluationMapping 
-      SET status = '0'  -- Assuming '0' indicates a deactivated status
+      SET status = '2'  -- Assuming '0' indicates a deactivated status
       WHERE faculty = ? AND course = ? AND status = '1';
     `;
 
@@ -226,3 +229,40 @@ exports.replaceFaculty = (req, res) => {
     });
   });
 };
+
+exports.getReplacementRequestDetails = (req, res) => {
+  const { facultyIds } = req.query; // Expecting an array of faculty IDs
+
+  if (!facultyIds || !Array.isArray(facultyIds)) {
+    return res.status(400).send('Invalid faculty IDs provided');
+  }
+
+  // Join the facultyIds array into a comma-separated string for the SQL IN clause
+  const query = `
+SELECT 
+    frr.*, 
+    mc.name course_name, 
+    mf_old.name AS old_faculty_name, 
+    mf_new.name AS new_faculty_name
+FROM 
+    faculty_replacement_requests frr
+INNER JOIN 
+    master_courses mc ON frr.course_id = mc.id
+INNER JOIN 
+    master_faculty mf_old ON frr.old_faculty_id = mf_old.id
+INNER JOIN 
+    master_faculty mf_new ON frr.new_faculty_id = mf_new.id
+WHERE 
+    frr.old_faculty_id IN (?);
+
+  `;
+
+  db.query(query, [facultyIds], (err, results) => {
+    if (err) {
+      console.error('Error fetching replacement request details:', err);
+      return res.status(500).send('Error fetching replacement request details');
+    }
+    res.status(200).send(results);
+  });
+};
+
